@@ -1,5 +1,7 @@
-import { getRepository } from 'typeorm';
+import { getRepository, getCustomRepository } from 'typeorm';
 import AppError from '../errors/AppError';
+
+import TransactionRepository from '../repositories/TransactionsRepository';
 
 import Category from '../models/Category';
 import Transaction from '../models/Transaction';
@@ -24,7 +26,14 @@ class CreateTransactionService {
       throw new AppError('Transaction type not accepted');
     }
 
-    const transactionRepository = getRepository(Transaction);
+    const transactionRepository = getCustomRepository(TransactionRepository);
+
+    const { total } = await transactionRepository.getBalance();
+
+    if (type === 'outcome' && value > total) {
+      throw new AppError('Outcome value exceeds the total value');
+    }
+
     const categoryRepository = getRepository(Category);
     let categoryId = '';
 
